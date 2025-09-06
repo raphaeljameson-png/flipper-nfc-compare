@@ -1,10 +1,6 @@
-# Flipper Zero — NFC Compare
+# Flipper NFC Compare
 
-- Binaire prêt: voir Releases → `NFC_Compare.fap`
-- Installation: copier `NFC_Compare.fap` dans `apps/NFC/` sur la microSD du Flipper.
-- Utilisation:
-  - Gauche: choisir fichier A
-  - Bas: choisir fichier B
-  - Droite: scanner carte physique
-  - OK: comparer A ↔ carte
-  - Haut: comparer A ↔ B
+This project is a prototype application for comparing NFC functionalities using the Momentum mntm-011 NFC API.
+
+## TODOs
+- Replace placeholder implementations with actual SDK calls.

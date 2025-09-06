@@ -1,0 +1,6 @@
+{
+  "name": "Flipper NFC Compare",
+  "version": "1.0.0",
+  "description": "A prototype application for comparing NFC functionalities using Momentum mntm-011.",
+  "main": "src/main.c"
+}
