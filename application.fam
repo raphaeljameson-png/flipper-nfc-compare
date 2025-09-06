@@ -1,0 +1,11 @@
+App(
+    appid="nfc_compare",
+    name="NFC Compare",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="nfc_compare_app",
+    requires=["nfc"],
+    stack_size=2 * 1024,
+    fap_category="NFC",
+    fap_icon="A_B_10x10.png",
+    order=10,
+)
