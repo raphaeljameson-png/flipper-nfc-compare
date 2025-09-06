@@ -24,10 +24,10 @@ jobs:
           mkdir -p firmware/applications_user/nfc_compare
           cp application.fam nfc_compare.c nfc_compare_io.c nfc_compare_io.h firmware/applications_user/nfc_compare/
 
-      - name: Build (Docker)
+            - name: Build (Docker)
         uses: addnab/docker-run-action@v3
         with:
-          image: ghcr.io/flipperdevices/flipperzero-toolchain:latest
+          image: ghcr.io/flipperdevices/flipperzero-toolchain:nightly
           options: -v ${{ github.workspace }}/firmware:/work -w /work
           run: |
             ./fbt fap_nfc_compare
