@@ -1,0 +1,77 @@
+name: Build FAP
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo (app sources)
+        uses: actions/checkout@v4
+
+      - name: Checkout Flipper firmware
+        uses: actions/checkout@v4
+        with:
+          repository: flipperdevices/flipperzero-firmware
+          path: firmware
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Place app into applications_user
+        run: |
+          mkdir -p firmware/applications_user/nfc_compare
+          cp application.fam nfc_compare.c nfc_compare_io.c nfc_compare_io.h firmware/applications_user/nfc_compare/
+
+      # Connexion au registre GHCR (souvent optionnelle, mais aide en cas de throttling)
+      - name: Login to GHCR
+        run: echo $$e3sgc2VjcmV0cy5HSVRIVUJfVE9LRU4gfX0gfCBkb2NrZXIgbG9naW4gZ2hjci5pbyAtdSA=$$ --password-stdin
+
+      # Pré-pull de l’image avec retries pour éviter les échecs transitoires
+      - name: Pre-pull image with retry
+        run: |
+          for i in 1 2 3; do
+            docker pull ghcr.io/flipperdevices/flipperzero-toolchain:nightly && break
+            echo "Retry $i after wait"; sleep 20
+          done
+
+      # Construction via le toolchain officiel Flipper (Docker)
+      - name: Build (Docker)
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ghcr.io/flipperdevices/flipperzero-toolchain:nightly
+          options: -v ${{ github.workspace }}/firmware:/work -w /work
+          run: |
+            ./fbt fap_nfc_compare
+
+      # Recherche robuste de l'artefact .fap dans l'arborescence de build
+      - name: Find artifact
+        id: find
+        run: |
+          set -e
+          echo "Listing build tree for debug:"
+          find firmware/build -maxdepth 5 -type f -iname "*.fap" -print || true
+          # Essaie plusieurs motifs possibles
+          path=$(find firmware/build -type f \
+            -iname "*NFC*Compare*.fap" \
+            -o -iname "NFC_Compare.fap" \
+            -o -iname "*nfc*compare*.fap" \
+            | head -n1)
+          if [ -z "$path" ]; then
+            echo "No .fap found"; exit 1
+          fi
+          echo "artifact=$path" >> $GITHUB_OUTPUT
+          echo "Found artifact: $path"
+
+      # Publication automatique du .fap dans un Release (tag = numéro de run)
+      - name: Upload artifact to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          files: ${{ steps.find.outputs.artifact }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
